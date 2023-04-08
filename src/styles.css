@@ -66,7 +66,7 @@ button[type="submit"]:hover {
   background-color: #3c69acb9;
 }
 
-.result {
+.current {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -79,7 +79,7 @@ button[type="submit"]:hover {
   text-align: center;
 }
 
-.result > p {
+.current > p {
   font-size: 1.5rem;
   color: #555;
 }
