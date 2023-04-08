@@ -15,13 +15,23 @@
       </label>
       <button id="submit" type="submit">Get Weather</button>
     </form>
-    <div id="result">
-      <p> The weather today:</p>
-      <p id="error" class="hidden">Oops, something went wrong! Please try again.</p>
-      <p id="temperature"></p>
-      <p id="humidity"></p>
-      <p id="wind-speed"></p>
-      <p id="description"></p>
+    <div class="content">
+      <nav class="nav">
+        <div class="nav-element selected" id="today">Today</div>
+        <div class="nav-element" id="forecast">Forecast</div>
+        <div class="nav-element" id="map">Map</div>
+      </nav>
+      <div class="section">
+        <div class="result">
+          <p id="title"> The weather today:</p>
+          <p id="error" class="hidden">Oops, something went wrong! Please try again.</p>
+          <p id="empty">Insert your city name</p>
+          <p id="description"></p>
+          <p id="temperature"></p>
+          <p id="humidity"></p>
+          <p id="wind-speed"></p>
+        </div>
+      </div>
     </div>
   </div>
 </body>

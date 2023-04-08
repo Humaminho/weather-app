@@ -8,6 +8,7 @@ const inputEl = document.getElementById('location');
 const submit = document.getElementById('submit');
 const form = document.getElementById('form')
 const errorEl = document.getElementById('error')
+const emptyEl = document.getElementById('empty')
 
 log('-- CONSOLE --');
 
@@ -32,13 +33,15 @@ function search() {
     return response.json();
   })
   .then((response) => {
+    errorEl.classList.add('hidden');
+    emptyEl.classList.add('hidden');
     displayInfo(response);
-    errorEl.classList.add('hidden')
   })
   .catch((error) => {
     log(error)
     clear();
-    errorEl.classList.remove('hidden')
+    errorEl.classList.remove('hidden');
+    emptyEl.classList.remove('hidden');
   });
 
 }
@@ -59,3 +62,15 @@ function clear() {
   windSpeedEl.innerText = "";
   descriptionEl.innerText = "";
 }
+
+function activeNav(e) {
+  navElements.forEach((el) => {
+    el.classList.remove('selected');
+  })
+  e.currentTarget.classList.add('selected');
+}
+
+const navElements = document.querySelectorAll('.nav-element');
+navElements.forEach((element) => {
+  element.addEventListener('click', activeNav);
+})
