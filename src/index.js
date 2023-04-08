@@ -4,8 +4,10 @@ const inputEl = document.getElementById('location');
 const submit = document.getElementById('submit');
 const form = document.getElementById('form')
 const forecastEl = document.getElementById('forecast');
+let currentLocation = "";
+const section = document.querySelector('.section');
 
-forecastEl.addEventListener('click', getForecast('tiflet'));
+forecastEl.addEventListener('click', getForecast);
 
 log('-- CONSOLE --');
 
@@ -14,14 +16,14 @@ form.addEventListener('submit', (e) => {
 })
 submit.addEventListener('click', () => {
   if (inputEl.value) {
-    const location = inputEl.value;
-    getCurrentWeather(location);
+    currentLocation = inputEl.value;
+    getCurrentWeather();
   } else return;
 });
 
-function getCurrentWeather(location) {
+function getCurrentWeather() {
 
-  const path = `http://api.weatherapi.com/v1/current.json?key=1c22c861d3d140b58e7202945230604&q=${location}`
+  const path = `http://api.weatherapi.com/v1/current.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}`
 
   fetch(path, { mode: 'cors' })
   .then((response) => {
@@ -32,36 +34,35 @@ function getCurrentWeather(location) {
   })
   .then((response) => {
     displayCurrentWeather(response);
-    const errorEl = document.getElementById('error')
-    const emptyEl = document.getElementById('empty')
-    errorEl.classList.add('hidden');
-    emptyEl.classList.add('hidden');
+    // const emptyEl = document.getElementById('empty');
+    // emptyEl.classList.add('hidden');
   })
   .catch((error) => {
-    log(error)
     clear();
+    const errorEl = document.getElementById('error');
     errorEl.classList.remove('hidden');
-    emptyEl.classList.remove('hidden');
   });
 
 }
 
-function getForecast(location) {
+function getForecast() {
 
-  const path = `http://api.weatherapi.com/v1/forecast.json?key=1c22c861d3d140b58e7202945230604&q=${location}`
+  const path = `http://api.weatherapi.com/v1/forecast.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}&days=5`
 
   fetch(path, { mode: 'cors' })
   .then((response) => {
-    log(response.json())
+    return(response.json())
+  })
+  .then((response) => {
+    displayForecast();
   })
 }
 
 function displayCurrentWeather(response) {
-  const section = document.querySelector('.section');
   section.innerText = "";
-  const currentSection = document.createElement('div');
-  currentSection.classList.add('current');
-  currentSection.innerHTML = `
+  const todayWeatherSection = document.createElement('div');
+  todayWeatherSection.classList.add('current');
+  todayWeatherSection.innerHTML = `
   <p id="title"> The weather today:</p>
   <p id="error" class="hidden">Oops, something went wrong! Please try again.</p>
   <p id="empty">Insert your city name</p>
@@ -69,7 +70,36 @@ function displayCurrentWeather(response) {
   <p id="temperature">${response.current.temp_c} °C</p>
   <p id="humidity">${response.current.humidity} %</p>
   <p id="wind-speed">${response.current.wind_kph} km/h</p>`
-  section.appendChild(currentSection);
+  section.appendChild(todayWeatherSection);
+}
+function displayForecast() {
+  section.innerText = "";
+  const forecastSection = document.createElement('div');
+  forecastSection.classList.add('forecast');
+  forecastSection.innerHTML = `
+  <div id="forecast">
+  <section>
+    <h2>Today</h2>
+    <p>25°C</p>
+  </section>
+  <section>
+    <h2>Tomorrow</h2>
+    <p>27°C</p>
+  </section>
+  <section>
+    <h2>Day after tomorrow</h2>
+    <p>28°C</p>
+  </section>
+  <section>
+    <h2>Fourth day</h2>
+    <p>24°C</p>
+  </section>
+  <section>
+    <h2>Fifth day</h2>
+    <p>23°C</p>
+  </section>
+  </div>`
+  section.appendChild(forecastSection);
 }
 
 function description(r) {
@@ -107,8 +137,8 @@ if ('geolocation' in navigator) {
 
 function getLocation() {
   navigator.geolocation.getCurrentPosition((pos) => {
-    const coords = `${pos.coords.latitude},${pos.coords.longitude}`
-    getCurrentWeather(coords);
+    currentLocation = `${pos.coords.latitude},${pos.coords.longitude}`
+    getCurrentWeather();
   }, (err) => {
     throw(new Error(err.message));
   });
