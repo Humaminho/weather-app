@@ -1,28 +1,49 @@
 import './styles.css';
+import { format } from 'date-fns'
 const log = console.log;
+
 const inputEl = document.getElementById('location');
 const submit = document.getElementById('submit');
 const form = document.getElementById('form')
 const forecastEl = document.getElementById('forecast');
+const currentEl = document.getElementById('today');
+const mapEl = document.getElementById('map');
+
 let currentLocation = "";
+let currentSection = 'current';
+
 const section = document.querySelector('.section');
 
+currentEl.addEventListener('click', getCurrentWeather);
 forecastEl.addEventListener('click', getForecast);
-
-log('-- CONSOLE --');
+mapEl.addEventListener('click', getMap);
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
 })
+
 submit.addEventListener('click', () => {
   if (inputEl.value) {
     currentLocation = inputEl.value;
-    getCurrentWeather();
+    switch(currentSection) {
+      case 'current':
+        getCurrentWeather();
+        break;
+      case 'forecast':
+        getForecast();
+        break;
+      case 'map':
+        getMap();
+        break;
+      default:
+        log('something is wrong');
+    }
   } else return;
 });
 
 function getCurrentWeather() {
 
+  currentSection = 'current';
   const path = `http://api.weatherapi.com/v1/current.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}`
 
   fetch(path, { mode: 'cors' })
@@ -34,28 +55,55 @@ function getCurrentWeather() {
   })
   .then((response) => {
     displayCurrentWeather(response);
-    // const emptyEl = document.getElementById('empty');
-    // emptyEl.classList.add('hidden');
   })
   .catch((error) => {
-    clear();
-    const errorEl = document.getElementById('error');
-    errorEl.classList.remove('hidden');
+    handleError();
+    log(error);
   });
 
 }
 
 function getForecast() {
 
-  const path = `http://api.weatherapi.com/v1/forecast.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}&days=5`
+  currentSection = 'forecast';
+  const path = `http://api.weatherapi.com/v1/forecast.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}&days=5`;
 
   fetch(path, { mode: 'cors' })
   .then((response) => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
     return(response.json())
   })
   .then((response) => {
-    displayForecast();
+    displayForecast(response);
   })
+  .catch((error) => {
+    handleError();
+    log(error);
+  })
+}
+
+function getMap() {
+
+  currentSection = 'map';
+  const path = `http://api.weatherapi.com/v1/forecast.json?key=1c22c861d3d140b58e7202945230604&q=${currentLocation}&days=5`;
+
+  fetch(path, { mode: 'cors'})
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return response.json();
+  })
+  .then((response) => {
+    displayMap([response.location.lat, response.location.lon]);
+  })
+  .catch((error) => {
+    handleError();
+    log(error);
+  })
+
 }
 
 function displayCurrentWeather(response) {
@@ -72,34 +120,51 @@ function displayCurrentWeather(response) {
   <p id="wind-speed">${response.current.wind_kph} km/h</p>`
   section.appendChild(todayWeatherSection);
 }
-function displayForecast() {
+
+function displayForecast(response) {
   section.innerText = "";
   const forecastSection = document.createElement('div');
   forecastSection.classList.add('forecast');
+  
   forecastSection.innerHTML = `
-  <div id="forecast">
-  <section>
-    <h2>Today</h2>
-    <p>25°C</p>
+  <section class="forecast-section">
+  <h2 class="forecast-title">Today</h2>
+  <p class="forecast-temp">${response.forecast.forecastday[0].day.avgtemp_c}°C</p>
   </section>
-  <section>
-    <h2>Tomorrow</h2>
-    <p>27°C</p>
+  <section class="forecast-section">
+  <h2 class="forecast-title">${getDay().day+1} ${getDay().formatedMonth}</h2>
+  <p class="forecast-temp">${response.forecast.forecastday[1].day.avgtemp_c}°C</p>
   </section>
-  <section>
-    <h2>Day after tomorrow</h2>
-    <p>28°C</p>
+  <section class="forecast-section">
+  <h2 class="forecast-title">${getDay().day+2} ${getDay().formatedMonth}</h2>
+  <p class="forecast-temp">${response.forecast.forecastday[2].day.avgtemp_c}°C</p>
   </section>
-  <section>
-    <h2>Fourth day</h2>
-    <p>24°C</p>
+  <section class="forecast-section">
+  <h2 class="forecast-title">${getDay().day+3} ${getDay().formatedMonth}</h2>
+  <p class="forecast-temp">${response.forecast.forecastday[3].day.avgtemp_c}°C</p>
   </section>
-  <section>
-    <h2>Fifth day</h2>
-    <p>23°C</p>
-  </section>
-  </div>`
+  <section class="forecast-section">
+  <h2 class="forecast-title">${getDay().day+4} ${getDay().formatedMonth}</h2>
+  <p class="forecast-temp">${response.forecast.forecastday[4].day.avgtemp_c}°C</p>
+  </section>`
   section.appendChild(forecastSection);
+}
+
+function displayMap(array) {
+  section.innerText = "";
+  const mapEl = document.createElement('div');
+  mapEl.setAttribute('id', 'leaf-map');
+  section.appendChild(mapEl);
+
+  const map = L.map('leaf-map').setView(array, 10);
+  
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 18,
+  }).addTo(map);
+
+  var marker = L.marker(array).addTo(map);
+
 }
 
 function description(r) {
@@ -142,4 +207,21 @@ function getLocation() {
   }, (err) => {
     throw(new Error(err.message));
   });
+}
+
+function getDay() {
+  const d = new Date();
+  const day = d.getDate();
+  const month = d.getMonth();
+  const year = d.getFullYear();
+  const formatedMonth = format(new Date(year, month, day), 'MMM');
+  return { day, formatedMonth };
+}
+
+function handleError() {
+  section.innerText = "";
+  const errorEl = document.createElement('div')
+  errorEl.classList.add('error');
+  errorEl.innerText = 'Something went wrong! Please try again.'
+  section.appendChild(errorEl);
 }
